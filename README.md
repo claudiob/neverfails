@@ -50,8 +50,6 @@ The following commands run the project in a local server instance. They should b
     cd grocery
     source env/bin/activate
     python manage.py runserver
-
-Make sure to run the 
     
 Step 2 (Write step definitions)
 -------------------------------
@@ -64,7 +62,7 @@ For the sake of the `grocery` example, we define the three steps of the `No appl
 * <span style="color:#adad27">When I browse the list of apples</span>: this step passes if a page exists listing apples and if I can open that page in a browser
 * <span style="color:#adad27">Then I should see the text "No apples left"</span>: this step passes if I see the text "No apples left" in that page
 
-The file `fails.py` contains these exact definition in Python and lettuce code. 
+The file `fails.py` in this package contains these definition in Python and lettuce code. 
 
 Step 3 (Run and watch it fail)
 ------------------------------
