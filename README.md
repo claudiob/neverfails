@@ -42,6 +42,7 @@ The following commands set up a new `grocery` Django project with a basic SQLite
     source env/bin/activate
     pip install lettuce
     echo -e "\nINSTALLED_APPS += ('lettuce.django', )" >> settings.py
+    python manage.py syncdb --noinput
     mkdir features
     echo -e "Feature: Apples\n\tScenario: No apples left\n\t\tGiven there are no apples\n\t\tWhen I browse the list of apples\n\t\tThen I should see the text \"No apples left\"" > features/apples.feature
 
@@ -162,3 +163,17 @@ How neverfails works
 Similarly to lettuce, neverfails recognizes the steps using regular expressions and checks whether they pass or fail. If the step fails, neverfails *does not* raise an AssertionError but runs the code to make the step pass, then runs the step again. 
 
 So far, neverfails is only able to recognize the three kinds of step included in the `grocery` sample project: creating a model, creating a view, adding text to that view. This is why I call neverfails a proof of concept. If other people find this project interesting (or if I get more time to work on this), then neverfails will grow up to the point where people with no programming experience will be able to create complex web applications by describing what they wish for.
+
+Installing neverfails
+=====================
+
+To follow the example described above, you need [pip](http://pypi.python.org/pypi/pip), [virtualenv](http://www.virtualenv.org) and [django](http://www.djangoproject.com/) installed on your machine.
+The following commands will install these three packages, given you already have Python installed with [setuptools](http://pypi.python.org/pypi/setuptools) enabled:
+
+    easy_install pip
+    pip install django
+    pip install virtualenv
+    
+The actual neverfails package can either be [downloaded from GitHub](https://github.com/claudiob/neverfails) or [installed from PyPi](http://pypi.python.org/pypi/neverfails) by running:
+
+    pip install neverfails
