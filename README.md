@@ -87,8 +87,8 @@ The result is the following, indicating that the *first* step has failed:
 AssertionError: No model found called apple
 ```
 
-Step 4a (Write code to make the first step pass)
-------------------------------------------------    
+Step 4 (Write code to make the three steps pass)
+-------------------------------------------------    
     
 To make the first step pass, we need to create an application called apples, add it to the list of installed apps, create an Apple model and store it in the database:
 
@@ -106,9 +106,6 @@ The result is now the following, indicating that the *second* step has failed:
 AssertionError: No URL pattern found matching apples/
 ```
 
-Step 4b (Write code to make the second step pass)
--------------------------------------------------    
-
 To make the second step pass, we need to create a URL pattern matching "apples/" that points to a blank HTML page:
 
 ``` bash
@@ -124,10 +121,7 @@ The result is now the following, indicating that the *third* step has failed:
 AssertionError: The text "No apples" left was not found in the current page
 ```
 
-Step 4c (Write code to make the third step pass)
--------------------------------------------------    
-
-To make the thid step pass, we need to add the text "No apples left" to the page the lists apples:
+To make the third step pass, we need to add the text "No apples left" to the page that lists apples:
 
 ``` bash
 echo -e "No apples left" >> apples/templates/apples.html
@@ -154,7 +148,8 @@ Feature: Apples
 Neverfails does all of this, so you don't have to
 =================================================
 
-The `grocery` example shows that Behaviour-Driven Development is time-consuming even for very small applications, with an empty model and a view showing one sentence. Time is spent watching the test fail and writing snippets of code that are common to every web application (creating a model, filling view with text and so on).
+The `grocery` example shows that Behaviour-Driven Development is time-consuming even for very small applications, with an empty model and a view showing one sentence. 
+Time is spent watching the tests fail and writing snippets of code that are common to every web application (creating a model, filling view with text and so on).
 
 Neverfails reduces this time by automatically creating the missing snippets of code when a step fails. 
 
