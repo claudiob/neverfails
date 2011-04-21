@@ -7,7 +7,7 @@ import urls
 
 # MODELS
 
-@step(u'there are no (.+?)$')
+@step(u'there are no (\S+?)$')
 def no_instances(step, objects):
     model_name = objects[:-1] # TODO: improve singularization
     step.given('there is a model called %s' % model_name)
@@ -48,8 +48,7 @@ def navigate_to_that_page(step):
 
 # CONTENT
 
-@step(u'I should see the text "(.*?)"$')
+@step(u'I should see the text "([^"]*)"$')
 def should_see_the_text(step, text):
-    text = re.sub('\\\\"', '"', text) # Fix double quotes
     assert text in world.browser.page_source, \
         "The text \"%s\" was not found in the current page" % text
