@@ -1,4 +1,0 @@
-recursive-include never_fails *.*
-include README.md
-include MIT-LICENSE
-include HISTORY.txt

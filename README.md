@@ -13,12 +13,12 @@ Neverfails is a proof of concept to reduce this list to **two steps**:
 
 With neverfails, step definitions do not simply check whether the existing code satifies the required behaviour or not. They also **write the code** to make them pass.
 
-Neverfails involves an ambitious idea: code generation based on specifications. This idea does not depend on a specific platform or programming language. In principle, it could be implemented with any framework. Actually, I have decided to test it using Django as a web framework and Python as the programming language. [cowboycoded](https://github.com/cowboycoded/never_fails), on the other hand, is investigating the same approach using Ruby and Rails.
+Neverfails involves an ambitious idea: code generation based on specifications. This idea does not depend on a specific platform or programming language. In principle, it could be implemented with any framework. The current claudiob/neverfails@rails branch uses Rails as a web framework and Ruby as the programming language. The master claudiob/neverfails@master branch, on the other hand, is investigating the same approach using Python and Django.
 
-Behavior-driven development in Django
-=====================================
+Behavior-driven development in Rails
+====================================
 
-Before approaching neverfails, it is important to understand how Behaviour-Driven Development (BDD) typically takes place within a Django project.
+Before approaching neverfails, it is important to understand how Behaviour-Driven Development (BDD) typically takes place within a Rails project.
 
 Step 1 (Describe behavior in plain text)
 ----------------------------------------
@@ -33,34 +33,53 @@ Feature: Apples
     Then I should see the text "No apples left"
 ```
 
-Having described behavior in plain text, we create a blank Django project and make use of [lettuce](https://github.com/gabrielfalcao/lettuce) to run the steps. Lettuce is a BDD tool for python, 100% inspired on [cucumber](https://github.com/aslakhellesoy/cucumber). 
+Having described behavior in plain text, we create a blank Rails project and make use of [cucumber](https://github.com/gabrielfalcao/lettuce) and [webrat](https://github.com/brynary/webrat) to run the steps.
 
-The following commands set up a new `grocery` Django project with a basic SQLite database, and a virtual environment with lettuce:
-
-``` bash
-django-admin.py startproject grocery
-cd grocery
-echo -e "\nDATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': 'grocery.db',}}" >> settings.py 
-virtualenv env
-source env/bin/activate
-pip install lettuce
-echo -e "\nINSTALLED_APPS += ('lettuce.django', )" >> settings.py
-python manage.py syncdb --noinput
-mkdir features
-echo -e "Feature: Apples\n\tScenario: No apples left\n\t\tGiven there are no apples\n\t\tWhen I browse the list of apples\n\t\tThen I should see the text \"No apples left\"" > features/apples.feature
-```
-The following commands run the project in a local server instance. They should be executed in a separate shell, since the basic Django server cannot be daemonized:
+The following commands set up a new `grocery` Rails project with a basic SQLite database, and a bundle installation with cucumber and webrat:
 
 ``` bash
+rails new grocery -JT
 cd grocery
-source env/bin/activate
-python manage.py runserver
+rm public/index.html
+rm public/images/rails.png
+echo -e '\ngem "cucumber"' >> Gemfile
+echo -e '\ngem "cucumber-rails"' >> Gemfile
+echo -e '\ngem "webrat"' >> Gemfile
+bundle install
+rails g cucumber:install --webrat
+echo "require 'cucumber/rails'
+
+if RUBY_VERSION =~ /1.8/
+  require 'test/unit/testresult'
+  Test::Unit.run = true
+end
+
+require 'webrat'
+require 'webrat/core/matchers'
+
+Webrat.configure do |config|
+  config.mode = :rack
+  config.open_error_files = false # Set to true if you want error pages to pop up in the browser
+end
+
+World(Webrat::Methods)
+World(Webrat::Matchers)
+
+ActionController::Base.allow_rescue = false" >| features/support/env.rb
+sed -i '' -e's/<<: \*test/<<: *development/' config/database.yml
+rake db:create
+echo -e "Feature: Apples
+Scenario: No apples left
+    Given there are no apples
+    When I browse the list of apples
+    Then I should see the text \"No apples left\"
+" > features/apples.feature
 ```
-    
+
 Step 2 (Write step definitions)
 -------------------------------
 
-To make Django aware of what the actions in the scenario actually mean, we can either write new step definitions, or import some library that translates common actions into Python commands. One such popular library for Web applications is [webrat](https://github.com/brynary/webrat), but is only available for Ruby. A very limited Python-equivalent is [radish](https://github.com/ff0000/radish).
+To make Rails aware of what the actions in the scenario actually mean, we can either write new step definitions, or import some library that translates common actions into Python commands. One such popular library for Web applications is [webrat](https://github.com/brynary/webrat).
 
 For the sake of the `grocery` example, we define the three steps of the `No apples left` scenario as follows:
 
@@ -68,64 +87,112 @@ For the sake of the `grocery` example, we define the three steps of the `No appl
 * *When I browse the list of apples*: this step passes if a page exists listing apples and if I can open that page in a browser
 * *Then I should see the text "No apples left"*: this step passes if I see the text "No apples left" in that page
 
-The file `fails.py` in this package contains these definition in Python and lettuce code. 
+The file `fails_steps.rb` in this package contains these definition in Ruby and webrat code. 
 
 Step 3 (Run and watch it fail)
 ------------------------------
 
-The following commands include this file in the project and run the steps again:
+The following commands copy the content of this file in the project and run the steps again:
 
 ``` bash
-pip install neverfails
-echo -e "from neverfails.terrain import *\nfrom neverfails import fails" > terrain.py
-python manage.py harvest -S features/
+echo -e "# MODELS
+
+Given /^there are no (\\S+?)$/ do |objects|
+  model_name = objects.classify
+  Given \"there is a model called #{model_name}\"
+  Given \"there are no instances of that model\"
+end
+
+Given /^(?:|there is )a model called (.+?)$/ do |model_name|
+  assert ActiveRecord::Base.connection.tables.include?(model_name.tableize), 
+    \"No model found called #{model_name}\"
+  @last_model = model_name.constantize
+end
+
+Given /^(?:|there are )no instances of that model$/ do
+  @last_model.delete_all
+end
+
+# NAVIGATION
+
+When /^I browse the list of (.+?)$/ do |models|
+  Given \"there is a page listing #{models}\"
+  When \"I navigate to that page\"
+end
+
+Given /^there is a page listing (.+?)$/ do |models|
+  Given \"there is a page with URL /#{models}\"
+end
+
+Given /^there is a page with URL (.+?)$/ do |url|
+  assert ActionController::Routing::Routes.routes.collect(&:conditions).
+    collect{|route| route[:path_info] =~ url }.any?, 
+    \"No URL pattern found matching #{url}\"
+  @last_url = url
+end
+
+When /^I navigate to that page$/ do 
+  visit @last_url
+end
+
+# CONTENT
+
+Then /^I should see the text \"([^\"]*)\"$/ do |text|
+  begin
+    assert_contain text
+  rescue Test::Unit::AssertionFailedError => e
+    raise e.class, \"The text \\\"#{text}\\\" was not found in the current page\"
+  end  
+end
+" > features/step_definitions/fails_steps.rb
+cucumber RAILS_ENV=development
 ```
 
 The result is the following, indicating that the *first* step has failed:
 
 ```
-AssertionError: No model found called apple
+No model found called Apple. (Test::Unit::AssertionFailedError)
 ```
 
 Step 4 (Write code to make the three steps pass)
 -------------------------------------------------    
     
-To make the first step pass, we need to create an application called apples, add it to the list of installed apps, create an Apple model and store it in the database:
+To make the first step pass, we need to create an Apple model and store it in the database:
 
 ``` bash
-python manage.py startapp apples
-echo -e "INSTALLED_APPS += ('apples', )" >> settings.py 
-echo -e "class Apple(models.Model):\n\tpass" >> apples/models.py
-python manage.py syncdb --noinput
-python manage.py harvest -S features/
+rails g model apple             
+rake db:migrate
+cucumber RAILS_ENV=development
 ```
 
 The result is now the following, indicating that the *second* step has failed:
 
 ```
-AssertionError: No URL pattern found matching apples/
+No URL pattern found matching /apples. (Test::Unit::AssertionFailedError)
 ```
 
 To make the second step pass, we need to create a URL pattern matching "apples/" that points to a blank HTML page:
 
 ``` bash
-echo -e "from django.views.generic import TemplateView\nurlpatterns += patterns('',\n\t(r'^apples/',  TemplateView.as_view(template_name='apples.html')),\n)\n" >> urls.py
-mkdir apples/templates
-touch apples/templates/apples.html
-python manage.py harvest -S features/
+rails g controller Apples index
+sed -i '' '  
+/get "apples\/index"/ a\
+    match "/apples" => "apples#index"
+' config/routes.rb
+cucumber RAILS_ENV=development
 ```
 
 The result is now the following, indicating that the *third* step has failed:
 
 ```
-AssertionError: The text "No apples" left was not found in the current page
+The text "No apples" left was not found in the current page (Test::Unit::AssertionFailedError)
 ```
 
 To make the third step pass, we need to add the text "No apples left" to the page that lists apples:
 
 ``` bash
-echo -e "No apples left" >> apples/templates/apples.html
-python manage.py harvest -S features/
+echo "No apples left" >| app/views/apples/index.html.erb
+cucumber RAILS_ENV=development
 ```
 
 Step 5 (Run again and see the step pass)
@@ -141,92 +208,35 @@ Feature: Apples
     Then I should see the text "No apples left"
     
 1 feature (1 passed)
-1 scenario (1 passed)
 3 steps (3 passed)
 ```
 
-Neverfails does all of this, so you don't have to
-=================================================
+Neverfails does all of this, so you don't have to (TO COMPLETE)
+===============================================================
 
 The `grocery` example shows that Behaviour-Driven Development is time-consuming even for very small applications, with an empty model and a view showing one sentence. 
 Time is spent watching the tests fail and writing snippets of code that are common to every web application (creating a model, filling view with text and so on).
 
 Neverfails reduces this time by automatically creating the missing snippets of code when a step fails. 
 
-Step 1 (Describe behavior in plain text)
-----------------------------------------
+*** TO COMPLETE ***
 
-Continuing with the grocery example, say we want to add this new scenario:
 
-``` cucumber
-Feature: Bananas
-  Scenario: No bananas left
-    Given there are no bananas
-    When I browse the list of bananas
-    Then I should see the text "No bananas left"
-```
+How neverfails works (TO COMPLETE)
+==================================
 
-The following commands add the previous scenario to the grocery project and include neverfails step definitions:
+*** TO COMPLETE ***
 
-``` bash
-echo -e "Feature: Bananas\n\tScenario: No bananas left\n\t\tGiven there are no bananas\n\t\tWhen I browse the list of bananas\n\t\tThen I should see the text \"No bananas left\"" > features/bananas.feature
-echo -e "from neverfails.terrain import *\nfrom neverfails import neverfails" >| terrain.py
-```
 
-Step 2 (Run and watch it pass)
-------------------------------
+Installing neverfails (TO COMPLETE)
+===================================
 
-Both the `apples` and the `bananas` scenario can be run with the command:
+To follow the example described above, you need [rails](https://github.com/rails/rails) and [bundler](http://gembundler.com) installed on your machine.
+The following commands will install these packages, given you already have Ruby installed with [rubygems](http://rubygems.org) enabled:
 
 ``` bash
-python manage.py harvest -S features/
+gem install rails
+gem install bundler
 ```
 
-The `apples` scenario passes since we already wrote all its required. The `bananas` scenario, though, passes as well:
-
-``` cucumber
-Feature: Apples
-  Scenario: No apples left
-    Given there are no apples
-    When I browse the list of apples
-    Then I should see the text "No apples left"
-
-Feature: Bananas
-  Scenario: No bananas left
-    Given there are no bananas
-Creating tables ...
-Creating table bananas_banana
-Installing custom SQL ...
-Installing indexes ...
-    When I browse the list of bananas
-    Then I should see the text "No bananas left"
-      
-2 features (2 passed)
-2 scenarios (2 passed)
-6 steps (6 passed)
-```
-
-How neverfails works
-====================
-
-Similarly to lettuce, neverfails recognizes the steps using regular expressions and checks whether they pass or fail. If the step fails, neverfails *does not* raise an AssertionError but runs the code to make the step pass, then runs the step again. 
-
-So far, neverfails is only able to recognize the three kinds of step included in the `grocery` sample project: creating a model, creating a view, adding text to that view. This is why I call neverfails a proof of concept. If other people find this project interesting (or if I get more time to work on this), then neverfails will grow up to the point where people with no programming experience will be able to create complex web applications by describing what they wish for.
-
-Installing neverfails
-=====================
-
-To follow the example described above, you need [pip](http://pypi.python.org/pypi/pip), [virtualenv](http://www.virtualenv.org) and [django](http://www.djangoproject.com/) installed on your machine.
-The following commands will install these three packages, given you already have Python installed with [setuptools](http://pypi.python.org/pypi/setuptools) enabled:
-
-``` bash
-easy_install pip
-pip install django
-pip install virtualenv
-```
-    
-The actual neverfails package can either be [downloaded from GitHub](https://github.com/claudiob/neverfails) or [installed from PyPi](http://pypi.python.org/pypi/neverfails) by running:
-
-``` bash
-pip install neverfails
-```
+*** TO COMPLETE ***
