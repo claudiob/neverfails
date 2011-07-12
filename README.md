@@ -13,7 +13,12 @@ Neverfails is a proof of concept to reduce this list to **two steps**:
 
 With neverfails, step definitions do not simply check whether the existing code satifies the required behaviour or not. They also **write the code** to make them pass.
 
-Neverfails involves an ambitious idea: code generation based on specifications. This idea does not depend on a specific platform or programming language. In principle, it could be implemented with any framework. Actually, I have decided to test it using Django as a web framework and Python as the programming language. [cowboycoded](https://github.com/cowboycoded/never_fails), on the other hand, is investigating the same approach using Ruby and Rails.
+Neverfails involves an ambitious idea: code generation based on specifications. 
+This idea does not depend on a specific platform or programming language. 
+In principle, it could be implemented with any framework. 
+In this [master branch](https://github.com/claudiob/neverfails/tree/master), I test this idea using Django as a web framework and Python as the programming language.
+In the [rails branch](https://github.com/claudiob/neverfails/tree/rails), I use instead Ruby on Rails.
+[cowboycoded](https://github.com/cowboycoded/never_fails) is also investigating this approach using Ruby and Rails.
 
 Behavior-driven development in Django
 =====================================
