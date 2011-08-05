@@ -33,9 +33,9 @@ Feature: Apples
     Then I should see the text "No apples left"
 ```
 
-Having described behavior in plain text, we create a blank Rails project and make use of [cucumber](https://github.com/gabrielfalcao/lettuce) and [webrat](https://github.com/brynary/webrat) to run the steps.
+Having described behavior in plain text, we create a blank Rails project and make use of [cucumber](https://github.com/gabrielfalcao/lettuce) and [capybara](https://github.com/jnicklas/capybara) to run the steps.
 
-The following commands set up a new `grocery` Rails project with a basic SQLite database, and a bundle installation with cucumber and webrat:
+The following commands set up a new `grocery` Rails project with a basic SQLite database, and a bundle installation with cucumber and capybara:
 
 ``` bash
 rails new grocery -JT
@@ -44,27 +44,10 @@ rm public/index.html
 rm public/images/rails.png
 echo -e '\ngem "cucumber"' >> Gemfile
 echo -e '\ngem "cucumber-rails"' >> Gemfile
-echo -e '\ngem "webrat"' >> Gemfile
 bundle install
-rails g cucumber:install --webrat
+rails g cucumber:install
 echo "require 'cucumber/rails'
-
-if RUBY_VERSION =~ /1.8/
-  require 'test/unit/testresult'
-  Test::Unit.run = true
-end
-
-require 'webrat'
-require 'webrat/core/matchers'
-
-Webrat.configure do |config|
-  config.mode = :rack
-  config.open_error_files = false # Set to true if you want error pages to pop up in the browser
-end
-
-World(Webrat::Methods)
-World(Webrat::Matchers)
-
+Capybara.default_selector = :css
 ActionController::Base.allow_rescue = false" >| features/support/env.rb
 sed -i '' -e's/<<: \*test/<<: *development/' config/database.yml
 rake db:create
@@ -79,7 +62,7 @@ Scenario: No apples left
 Step 2 (Write step definitions)
 -------------------------------
 
-To make Rails aware of what the actions in the scenario actually mean, we can either write new step definitions, or import some library that translates common actions into Python commands. One such popular library for Web applications is [webrat](https://github.com/brynary/webrat).
+To make Rails aware of what the actions in the scenario actually mean, we can either write new step definitions, or import some library that translates common actions into Python commands. One such popular library for Web applications is [capybara](https://github.com/jnicklas/capybara).
 
 For the sake of the `grocery` example, we define the three steps of the `No apples left` scenario as follows:
 
@@ -87,7 +70,7 @@ For the sake of the `grocery` example, we define the three steps of the `No appl
 * *When I browse the list of apples*: this step passes if a page exists listing apples and if I can open that page in a browser
 * *Then I should see the text "No apples left"*: this step passes if I see the text "No apples left" in that page
 
-The file `fails_steps.rb` in this package contains these definition in Ruby and webrat code. 
+The file `fails_steps.rb` in this package contains these definition in Ruby and capybara code. 
 
 Step 3 (Run and watch it fail)
 ------------------------------
@@ -139,7 +122,7 @@ end
 
 Then /^I should see the text \"([^\"]*)\"$/ do |text|
   begin
-    assert_contain text
+    page.should have_content(text)
   rescue Test::Unit::AssertionFailedError => e
     raise e.class, \"The text \\\"#{text}\\\" was not found in the current page\"
   end  
