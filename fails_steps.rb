@@ -24,18 +24,18 @@ When /^I browse the list of (.+?)$/ do |models|
 end
 
 Given /^there is a page listing (.+?)$/ do |models|
-  Given "there is a page with URL /#{models}"
+  Given "there is a page with URL /#{models}/index"
 end
 
 Given /^there is a page with URL (.+?)$/ do |url|
-  assert ActionController::Routing::Routes.routes.collect(&:conditions).
+  assert Rails.application.routes.routes.collect(&:conditions).
     collect{|route| route[:path_info] =~ url }.any?, 
     "No URL pattern found matching #{url}"
-  @last_url = url
+  $last_url = url
 end
 
 When /^I navigate to that page$/ do 
-  visit @last_url
+  visit $last_url
 end
 
 # CONTENT
