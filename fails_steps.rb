@@ -24,7 +24,7 @@ When /^I browse the list of (.+?)$/ do |models|
 end
 
 Given /^there is a page listing (.+?)$/ do |models|
-  Given "there is a page with URL /#{models}/index"
+  Given "there is a page with URL /#{models}"
 end
 
 Given /^there is a page with URL (.+?)$/ do |url|
@@ -42,7 +42,7 @@ end
 
 Then /^I should see the text "([^"]*)"$/ do |text|
   begin
-    assert_contain text
+    page.should have_content(text)
   rescue Test::Unit::AssertionFailedError => e
     raise e.class, "The text \"#{text}\" was not found in the current page"
   end  
