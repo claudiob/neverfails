@@ -15,10 +15,19 @@ With neverfails, step definitions do not simply check whether the existing code 
 
 Neverfails involves an ambitious idea: code generation based on specifications. This idea does not depend on a specific platform or programming language. In principle, it could be implemented with any framework. The current claudiob/neverfails@rails branch uses Rails as a web framework and Ruby as the programming language. The master claudiob/neverfails@master branch, on the other hand, is investigating the same approach using Python and Django.
 
+Enough README! I want to see a running example!
+===============================================
+
+Type the following in your terminal:
+
+    curl http://octo.cat/4j -Ls | bash
+
+This command will first create an empty Rails project with no models, no controllers, no views, just a requirement to *list the bananas available in a grocery*. Then the command will execute neverfails, which will automatically create a Banana model, controller, index view and route according to the requirements. The requirements will be satisfied without writing a single line of code!
+
 Behavior-driven development in Rails
 ====================================
 
-Before approaching neverfails, it is important to understand how Behaviour-Driven Development (BDD) typically takes place within a Rails project.
+To understand how neverfails works, it is important to clarify how Behaviour-Driven Development (BDD) typically takes place within a Rails project.
 
 Step 1 (Describe behavior in plain text)
 ----------------------------------------
