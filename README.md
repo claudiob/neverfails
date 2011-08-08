@@ -70,7 +70,7 @@ For the sake of the `grocery` example, we define the three steps of the `No appl
 * *When I browse the list of apples*: this step passes if a page exists listing apples and if I can open that page in a browser
 * *Then I should see the text "No apples left"*: this step passes if I see the text "No apples left" in that page
 
-The file `fails_steps.rb` in this package contains these definition in Ruby and capybara code. 
+The file `lib/neverfails/fails_steps.rb` in this package contains these definition in Ruby and capybara code. 
 
 Step 3 (Run and watch it fail)
 ------------------------------
